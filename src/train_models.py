@@ -14,7 +14,7 @@ def train_and_evaluate_models(X, y, feature_names):
     )
 
     print(f"Train size: {len(X_train)}")
-    print(f"Test size: {len(X_test)}")
+    print(f"Test size:  {len(X_test)}")
 
     models = {}
 
@@ -58,14 +58,13 @@ def train_and_evaluate_models(X, y, feature_names):
     models["CatBoost"] = cat_model
 
     for name, model in models.items():
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print(f"MODEL: {name}")
-        
+
         y_pred = model.predict(X_test)
-        if hasattr(model, "predict_proba"):
-            y_proba = model.predict_proba(X_test)[:, 1]
-        else:
-            y_proba = None
+        y_proba = model.predict_proba(X_test)[:, 1] if hasattr(
+            model, "predict_proba"
+        ) else None
 
         acc = accuracy_score(y_test, y_pred)
         print(f"Accuracy: {acc:.4f}")
@@ -74,15 +73,18 @@ def train_and_evaluate_models(X, y, feature_names):
             try:
                 auc = roc_auc_score(y_test, y_proba)
                 print(f"ROC-AUC: {auc:.4f}")
-            except:
-                print("ROC-AUC: Could not compute")
+            except Exception:
+                print("ROC-AUC: could not be computed")
 
         print("\nClassification Report:")
         print(classification_report(y_test, y_pred, digits=3))
 
         if hasattr(model, "feature_importances_"):
             print("\nFeature Importances:")
-            for fn, imp in sorted(zip(feature_names, model.feature_importances_), key=lambda x: x[1], reverse=True):
-                print(f"{fn:30s} {imp:.4f}")
+            importances = model.feature_importances_
+            for fn, imp in sorted(
+                zip(feature_names, importances), key=lambda x: x[1], reverse=True
+            ):
+                print(f"{fn:40s} {imp:.4f}")
 
     return models
